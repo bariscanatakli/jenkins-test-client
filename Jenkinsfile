@@ -2,30 +2,37 @@ pipeline {
     agent any
     
     stages {
-        stage('Checkout Client') {
+        stage('Checkout Service') {
             steps {
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/bariscanatakli/jenkins-test-client.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/bariscanatakli/jenkins-test-service.git']]])
             }
         }
         
-        stage('Frontend Tests') {
+        stage('Install Dependencies') {
             steps {
-                dir('frontend/jenkins-test') {
+                dir('backend/nestjs-api') {
                     sh 'npm install'
-                    sh 'npm run test:unit'
                 }
             }
         }
         
-        stage('Build Client Image') {
+        stage('Run Tests') {
             steps {
-                sh 'docker-compose build client'
+                dir('backend/nestjs-api') {
+                    sh 'npm run test'
+                }
             }
         }
         
-        stage('Deploy Client') {
+        stage('Build Docker Image') {
             steps {
-                sh 'docker-compose up -d client'
+                sh 'docker-compose build backend'
+            }
+        }
+        
+        stage('Deploy Service') {
+            steps {
+                sh 'docker-compose up -d backend'
             }
         }
     }
